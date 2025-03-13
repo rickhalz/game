@@ -3,6 +3,17 @@
 
 #include "stm32f4xx_hal.h"
 #include <stdio.h>
+#include "main.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#define RST_A() HAL_GPIO_WritePin(LCD_RESET_GPIO_Port,LCD_RESET_Pin,GPIO_PIN_RESET)
+#define RST_D() HAL_GPIO_WritePin(LCD_RESET_GPIO_Port,LCD_RESET_Pin,GPIO_PIN_SET)
+#define CS_A() HAL_GPIO_WritePin(LCD_CS_GPIO_Port,LCD_CS_Pin,GPIO_PIN_RESET)
+#define CS_D() HAL_GPIO_WritePin(LCD_CS_GPIO_Port,LCD_CS_Pin,GPIO_PIN_SET)
+#define DC_COMMAND() HAL_GPIO_WritePin(LCD_DC_GPIO_Port,LCD_DC_Pin,GPIO_PIN_RESET)
+#define DC_DATA() HAL_GPIO_WritePin(LCD_DC_GPIO_Port,LCD_DC_Pin,GPIO_PIN_SET)
 
 #define ILI9488_WIDTH 			320
 #define ILI9488_HEIGHT 			480
@@ -68,6 +79,14 @@
 #define ILI9488_GREENYELLOW	0xAFE5      /* 173, 255,  47 */
 #define ILI9488_PINK     		0xF81F
 
+#define MADCTL_MY  0x80
+#define MADCTL_MX  0x40
+#define MADCTL_MV  0x20
+#define MADCTL_ML  0x10
+#define MADCTL_RGB 0x00
+#define MADCTL_BGR 0x08
+#define MADCTL_MH  0x04
+
 // Initialize hardware
 void ILI9488_Init();
 
@@ -79,6 +98,8 @@ void ILI9488_SendData(uint8_t data);
 
 void fillScreen(uint16_t color);
 void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-
+void setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+void setRotation(uint8_t r);
+void ILI9488_SendData_Multi(uint8_t *buff, size_t buff_size);
 
 #endif
