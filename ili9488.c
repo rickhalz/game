@@ -1,49 +1,40 @@
 #include "ili9488.h"
+#include <stdint.h>
 
 extern SPI_HandleTypeDef hspi1;
 
+uint16_t palette[256];
 uint16_t width;
 uint16_t height;
 
 void ILI9488_SendCommand(uint8_t com)
 {
-	//*(__IO uint8_t *)(0x60000000) = com;
-	//Set DC HIGH for COMMAND mode
 	DC_COMMAND();    //Put CS LOW
 	CS_LOW();	//Write byte using SPI
 	HAL_SPI_Transmit(&hspi1, &com, 1, 1);
-	//SendByte(tmpCmd);
-	//WaitLastData();
-    //Bring CS HIGH
 	CS_HIGH();
 }
 
 void ILI9488_SendData(uint8_t data)
 {
-
-	//*(__IO uint8_t *)(0x60040000) = data;
-	//Set DC LOW for DATA mode
 	DC_DATA();
-	//Put CS LOW
 	CS_LOW();
-	//Write byte using SPI
 	HAL_SPI_Transmit(&hspi1, &data, 1, 1);
-	//SendByte(tmpCmd);
-	//WaitLastData();
 	CS_HIGH();
+}
+
+void ILI9488_SendData2(uint16_t data) {
+		uint8_t high_byte = data >> 8;
+		uint8_t low_byte = data & 0x00FF;
+		DC_DATA();
+		CS_LOW();
+		HAL_SPI_Transmit(&hspi1, &high_byte, 1, 1);
+		HAL_SPI_Transmit(&hspi1, &low_byte, 1, 1);
+		CS_HIGH();
 }
 
 void ILI9488_SendData_Multi(uint8_t *buff, size_t buff_size){
 	DC_DATA();
-	/*CS_A();
-	for (uint32_t i = 0; i < buff_size; i++)
-	  {
-	    SendByte(*buff);
-	    buff++;
-	  }
-
-	  WaitLastData();
-	  CS_D();*/
 	CS_LOW();
 	while (buff_size > 0){
 		uint16_t chunk_size = buff_size > 32768 ? 32768 : buff_size;
@@ -181,6 +172,88 @@ void setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 		ILI9488_SendCommand(ILI9488_WR); // write to RAM*/
 }
 
+void setCursor(uint16_t x, uint16_t y) {
+	setAddrWindow(x, y, ILI9488_WIDTH - x, 1);
+}
+
+void setPalette(uint8_t r, uint8_t g, uint8_t b, uint8_t n) {
+	palette[n] = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+}
+
+void drawPixel(uint16_t x, uint16_t y, uint16_t color)
+{
+		setCursor(x, y);
+		ILI9488_SendData2(color);
+}
+
+void putfont(int x, int y, unsigned char c, int bc, unsigned char n)
+{
+  int i, j;
+  unsigned char d;
+  int skip;
+  unsigned short c1;
+  const unsigned char *p;
+  static unsigned char lcddatabuf[16];
+  unsigned char *lcdbufp;
+  if (x <= -8 || x >= X_RES || y <= -8 || y >= Y_RES)
+    return;
+  if (y < 0) {
+    i = 0;
+    p = FontData + n * 8 - y;
+  } else {
+    i = y;
+    p = FontData + n * 8;
+  }
+  c1 = palette[c];
+  if (bc >= 0)
+    bc = palette[bc];
+  for (; i < y + 8; i++) {
+    if (i >= Y_RES)
+      return;
+    d = *p++;
+    if (x < 0) {
+      j = 0;
+      d <<= -x;
+    } else {
+      j = x;
+    }
+    if (bc < 0) {
+      skip = 1;
+      for (; j < x + 8; j++) {
+        if (j >= X_RES) {
+          break;
+        }
+        if (d & 0x80) {
+          if (skip) {
+            LCD_SetCursor(j, i);
+            skip = 0;
+          }
+          LCD_WriteData2(c1);
+        } else
+          skip = 1;
+        d <<= 1;
+      }
+    } else {
+      LCD_SetCursor(j, i);
+      lcdbufp = lcddatabuf;
+      for (; j < x + 8; j++) {
+        if (j >= X_RES) {
+          break;
+        }
+        if (d & 0x80) {
+          *lcdbufp++ = c1 >> 8;
+          *lcdbufp++ = (unsigned char)c1;
+        } else {
+          *lcdbufp++ = bc >> 8;
+          *lcdbufp++ = (unsigned char)bc;
+        }
+        d <<= 1;
+      }
+      if (lcdbufp != lcddatabuf)
+        LCD_WriteDataN(lcddatabuf, lcdbufp - lcddatabuf);
+    }
+  }
+}
 
 void setRotation(uint8_t r)
 {

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
 
 #define RST_LOW() HAL_GPIO_WritePin(LCD_RESET_GPIO_Port,LCD_RESET_Pin,GPIO_PIN_RESET)
 #define RST_HIGH() HAL_GPIO_WritePin(LCD_RESET_GPIO_Port,LCD_RESET_Pin,GPIO_PIN_SET)
@@ -96,10 +97,16 @@ void ILI9488_SendCommand(uint8_t cmd);
 // Write data to LCD
 void ILI9488_SendData(uint8_t data);
 
+void ILI9488_SendData2(uint16_t data);
+
+void setCursor(uint16_t x, uint16_t y);
 void fillScreen(uint16_t color);
 void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 void setAddrWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
+void drawPixel(uint16_t x, uint16_t y, uint16_t color);
 void setRotation(uint8_t r);
+void setPalette(uint8_t r, uint8_t g, uint8_t b, uint8_t n);
 void ILI9488_SendData_Multi(uint8_t *buff, size_t buff_size);
+extern uint16_t palette[];
 
 #endif
