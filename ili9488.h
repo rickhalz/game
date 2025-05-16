@@ -101,6 +101,8 @@ void ILI9488_SendData(uint8_t data);
 
 void ILI9488_SendData2(uint16_t data);
 
+void setCursor(unsigned short x, unsigned short y);
+
 void drawPixel(int16_t x, int16_t y, uint16_t color);
 void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg);
 void printText(char text[], int16_t x, int16_t y, uint16_t color, uint16_t bg);

@@ -98,7 +98,6 @@ food_t food;
 uint8_t selected = 0;
 uint16_t gameDelay = 100;
 
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -334,6 +333,7 @@ void settingsMenu() {
 
 void mainMenu() {
     drawMenu(selected);
+    printText("Hello WORLD", 20, 30, ILI9488_WHITE, ILI9488_BLACK);
 
     while (1) {
         if (!HAL_GPIO_ReadPin(GPIOA, BUTTON_UP_Pin)) {

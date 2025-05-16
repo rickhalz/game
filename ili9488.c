@@ -421,10 +421,14 @@ void drawPixel(int16_t x, int16_t y, uint16_t color)
 
 }
 
+void setCursor(unsigned short x, unsigned short y)
+{
+	setAddrWindow(x,y,ILI9488_WIDTH-x,1);
+}
 
 void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg)
 {
-	int size = 1;
+	int size = 3;
 	if(rotationNum == 1 || rotationNum ==3)
 	{
 		if((x >= ILI9488_WIDTH)            || // Clip right
@@ -444,15 +448,24 @@ void drawChar(int16_t x, int16_t y, unsigned char c, uint16_t color, uint16_t bg
   for (int8_t i=0; i<5; i++ ) {
     uint8_t line = pgm_read_byte(&(font1[c*5 +i]));
     for (int8_t j = 0; j<8; j++) {
-      if (line & 0x01) {
-        drawPixel(x+i, y+j, color);
-      } else if (bg != color) {
-        drawPixel(x+i, y+j, bg);
-      }
-      line >>= 1;
+        if (line & 0x01) {
+            if (size == 1) {
+                drawPixel(x + i, y + j, color);
+            } else {
+                fillRect(x + i * size, y + j * size, size, size, color);
+            }
+        } else if (bg != color) {
+            if (size == 1) {
+                drawPixel(x + i, y + j, bg);
+            } else {
+                fillRect(x + i * size, y + j * size, size, size, bg);
+            }
+        }
+        line >>= 1;
     }
   }
 }
+
 
 void drawBox(int16_t x, int16_t y, int16_t width, int16_t height, uint16_t color)
 {
@@ -483,7 +496,7 @@ void printText(char text[], int16_t x, int16_t y, uint16_t color, uint16_t bg)
 
 	for(uint16_t i=0; i<40 && text[i] != '\0'; i++)
 	{
-		drawChar(x+i*6, y, text[i],color,bg);
+		drawChar(x+i*6*3, y, text[i],color,bg);
 	}
 }
 
